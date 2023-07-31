@@ -6,7 +6,7 @@ Moving a physical/virtual stack to the cloud
 automation IaC
 use autoscatling
 managing cost - pay as you go
-![Project diagram](./images/AWS_Lift&Shift.png)
+![Project diagram](./images/proj3.jpg)
 ## Desired Learning outcomes
 familierizing with AWS services
 autoscaling
@@ -39,7 +39,7 @@ autoscaling
 
 ## Prerequisites:
 - AWS Account
-- 	
+- jdk 11 and Maven 
 ## Create Security Groups
 1. ELB Security group
     Name: vprofile-elb-SG
@@ -112,6 +112,21 @@ autoscaling
     Advanced details: User data : Paste contents of tomcat_ubuntu.sh
 
 ## Update IP to name mapping in Route 53
+Route 53 > Hosted zones > Create hosted zone
+    Domain name: vprofile.in
+    Type: [x] Private hosted zone (within an Amazon VPC)
+    Region : us-east-1
+    VPC: Default vpc
+
+vprofile.in > Create record
+    [x] Simple routing
+Define simple record:
+1.  Record name: db01
+    Value/Route traffic to **private ip of db01**
+2. Record name: mc01
+    Value/Route traffic to **private ip of mc01**
+3. Record name: rmq01
+    Value/Route traffic to **private ip of rmq01**
 
 ## Build Application from source code (locally)
 ## Upload artifact to S3 Bucket
