@@ -129,8 +129,53 @@ Define simple record:
     Value/Route traffic to **private ip of rmq01**
 
 ## Build Application from source code (locally)
+```bash
+mvn install
+```
 ## Upload artifact to S3 Bucket
+### for authentication we must first create IAM user
+IAM dashboard > Users > Create user
+    User name: s3admin
+        [x] Attach policies directly: AmazonS3FullAccess	
+IAM > Users > *s3admin* > Create access key > [x] Command Line Interface (CLI)
+```bash
+aws configure
+```
+enter access key and secret key
+
+3. Create S3 bucket:
+```bash
+aws s3 mb s3://vproarts3
+aws s3 cp target/vprofile-v2.war s3://vproarts3
+```
+
 ## Download artifcat from bucket to Tomcat EC2 instance
+1. we will install awscli and fetch the artifact
+    we will create a role (IAM Roles)
+    Trusted entity type: [x] AWS service
+    Use case: [x] EC2
+    Permissions policies: "AmazonS3FullAccess"
+    Role name: vprofile-artifact-store
+EC2 > Instances > app01 > Modify IAM role >select role 
+    Role: vprofile-artifact-store 
+2. ssh into app01
+```bash
+sudo -i
+apt update
+apt install awscli
+aws s3 ls
+aws s3 cp s3://vproarts3/vprofile-v2.war /tmp/
+systemctl stop tomcat9
+rm -rf /var/lib/tomcat9/webapps/ROOT/
+cp /tmp/vprofile-v2.war /var/lib/tomcat9/webapps/ROOT.war
+systemctl start tomcat9
+```
+checks:
+
+```bash
+ls /var/lib/tomcat9/webapps/
+cat /var/lib/tomcat9/webapps/ROOT/WEB-INF/classes/application.properties
+```
 ## Setup ELB with https connection (using ACM)
 ## Map ELB Endpoint to our website in godaddy DNS
 ## Verify
