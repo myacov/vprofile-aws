@@ -177,7 +177,58 @@ ls /var/lib/tomcat9/webapps/
 cat /var/lib/tomcat9/webapps/ROOT/WEB-INF/classes/application.properties
 ```
 ## Setup ELB with https connection (using ACM)
-## Map ELB Endpoint to our website in godaddy DNS
-## Verify
-## Build Autoscaling Group for tomcat Instances
+### Creating Load Balancer
+EC2 > Target groups
+    target type [x] Instances
+    Target group name: **vprofile-app-TG**
+    Protocol: HTTP ; Port : 8080
+    Health check path: /login
+    Advanced health check settings: Health check port [x] Override 8080
+    Healthy threshold: 3
 
+    Available instances: **vprofile-app01**
+        > click on Include as pending below
+        create Target group
+
+EC2 > Load balancers > [x] Application Load Balancer
+    Load balancer name: vprofile-prod-elb
+    Scheme: [x] Internet-facing
+    Network mapping: [x] Select all
+    Security groups: [x] vprofile-elb-SG
+Listeners and routing: Add Listener: HTTPS 443 Forward to: vprofile-app-TG
+Secure listener settings: add ACM certificate
+## Map ELB Endpoint to our website in godaddy DNS
+    copy "DNS name" to godaddy as CNAME record
+    name: vprofileapp Value: "DNS name"
+## Verify
+    Access through browser on https://vprofileapp.medinay.com
+## Build Autoscaling Group for tomcat Instances
+### Creating Image for instance
+EC2 > Instances > vprofile-app01 > Create image (AMI)
+    Image name: vprofile-app-image
+
+### Create Auto Scaling group
+EC2 > Launch configurations > Create launch configuration
+Name: vprofile-app-LC
+Amazon machine image: vprofile-app-image
+Instance type: t2.micro
+Additional configuration: IAM instance profile: vprofile-artifact-store(ROLE)
+[x] Enable EC2 instance detailed monitoring within CloudWatch
+Security groups: [x] existing:	vprofile-app-SG	
+Key pair: [x] existing: vprofile-prod-key
+
+EC2 > Auto Scaling groups > Create Auto Scaling group
+Name: vprofile-app-ASG
+Switch to launch configuration: vprofile-app-LC
+Availability Zones and subnets: Select all
+Load balancing : [x] Attach to an existing load balancer
+[x] Choose from your load balancer target groups
+select target group: [x] vprofile-app-TG | HTTP
+EC2 health checks: [x] Turn on Elastic Load Balancing health check
+Group size: min max and desired
+Scaling policies: [x] Target tracking scaling policy
+Add notifications: SNS Topic
+[x] Launch
+[x] Terminate
+[x] Fail to launch
+[x] Fail to terminate
